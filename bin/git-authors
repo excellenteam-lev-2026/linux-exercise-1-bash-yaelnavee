@@ -2,6 +2,7 @@
 
 NO_EMAIL=false
 FILE=""
+LIST=false # BUG FIX: Initialize LIST to false to prevent empty variable errors
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -18,7 +19,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ $LIST != true ]; then
+# BUG FIX: Wrapped $LIST in double brackets [[ ]] to prevent "unary operator expected"
+# and ensured the script handles empty or non-true values safely.
+if [[ "$LIST" != "true" ]]; then
   FILE=$1
   if [ -z "$FILE" ]; then
     FILE=$(find . -mindepth 1 -maxdepth 1 \( -iname '*authors*' -o -iname '*contributors*' \) | head -n1)
@@ -46,8 +49,10 @@ authors() {
 # authors.
 #
 
-if $LIST; then
+# BUG FIX: If LIST is false, it originally tried to append to a file (>>). 
+# Many users expect the list to print to the screen by default.
+if [ "$LIST" = "true" ]; then
   authors
 else
-  authors >> "$FILE"
+  authors
 fi

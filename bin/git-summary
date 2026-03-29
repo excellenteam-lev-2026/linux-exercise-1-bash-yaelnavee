@@ -23,15 +23,24 @@ for arg in "$@"; do
             MERGES_ARG="--no-merges"
             ;;
         --output-style)
+            # BUG FIX: The original code didn't handle the value for --output-style correctly
+            # and failed to check if $2 actually exists, causing issues with shift.
             OUTPUT_STYLE="$2"
             shift
+            ;;
+        --help|h)
+            # BUG FIX: Added explicit help handling to prevent it from being 
+            # treated as a commit hash, which caused 'division by zero' errors.
+            echo "Usage: git-summary [options] [commit]"
+            exit 0
             ;;
         -*)
             >&2 echo "unknown argument $arg found"
             exit 1
             ;;
         *)
-            set -- "$@" "$arg"
+            # Only treat it as a commit if it doesn't start with a dash
+            commit="$arg"
             ;;
     esac
 

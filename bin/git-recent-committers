@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+# וידוא שאנחנו בתוך ריפו של גיט
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  echo "Error: current directory is not a git repository" >&2
+  exit 1
+fi
+
+# הגדרת מספר הימים לבדיקה - עדיפות למשתנה הסביבה, ואז לערך 7 כברירת מחדל
+DAYS_LIMIT=${GIT_RECENT_COMMITTERS_DAYS:-7}
+
+# עיבוד הארגומנטים מהמשתמש
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    -n|--days) 
+      DAYS_LIMIT="$2"
+      shift 2 
+      ;;
+    *) 
+      echo "Usage: git-recent-committers [-n days]" >&2
+      exit 1 
+      ;;
+  esac
+done
+
+# בדיקה שהקלט הוא מספר חיובי
+if [[ ! "$DAYS_LIMIT" =~ ^[0-9]+$ ]]; then
+  echo "Error: please provide a positive number of days." >&2
+  exit 1
+fi
+
+echo "Committers from the last $DAYS_LIMIT days:"
+echo "----------------------------------------"
+
+# שימוש בלולאה על הפלט של git shortlog
+# מוציאה רשימה של: מספר קומיטים + שם
+git shortlog -sn --since="$DAYS_LIMIT days ago" | while read -r count author; do
+    if [ -n "$author" ]; then
+        # הדפסה יפה - ה-5d דואג שהמספרים יהיו מיושרים
+        printf "%5d  %s\n" "$count" "$author"
+    fi
+done
+
+# בדיקה אם הלולאה לא מצאה כלום
+if [ ${PIPESTATUS[0]} -eq 0 ] && [ -z "$(git log --since="$DAYS_LIMIT days ago" --oneline)" ]; then
+    echo "No commits found in the last $DAYS_LIMIT days."
+fi
+
+
+

@@ -4,11 +4,13 @@ options=""
 
 usage() {
 cat <<HERE
-usage: git alias [options]                          # list all aliases
+usage: git alias [options]                         # list all aliases
    or: git alias [options] <search-pattern>         # show aliases matching pattern
    or: git alias [options] <alias-name> <command>   # alias a command
-options:
+   or: git alias [options] --remove <alias-name>    # remove an alias (Step 4 Bonus)
+   or: git alias [options] --clear                  # remove all aliases (Step 4 Bonus)
 
+options:
     --global  Show or create alias in the system config
     --local   Show or create alias in the repository config
 HERE
@@ -19,27 +21,35 @@ if [[ "$1" == "--local" || "$1" == "--global" ]]; then
     shift
 fi
 
+# טיפול במחיקה
+if [[ "$1" == "--remove" || "$1" == "-r" ]]; then
+    alias_name="$2"
+    if [[ -z "$alias_name" ]]; then
+        echo "error: specify an alias name to remove." >&2
+        exit 1
+    fi
+    # מחיקת האליאס ובדיקה אם הוא היה קיים
+    git config $options --unset "alias.$alias_name" || { echo "error: alias '$alias_name' not found." >&2; exit 1; }
+    exit 0
+fi
+
+if [[ "$1" == "--clear" ]]; then
+    # מחיקת כל האליאסים בלולאה
+    git config $options --get-regexp '^alias\.' | cut -d' ' -f1 | while read -r key; do
+        git config $options --unset "$key"
+    done
+    exit 0
+fi
+
 case $# in
   0)
-      if [[ -z "$options" ]]; then
-        git config --get-regexp 'alias.*' | sed 's/^alias\.//' | sed 's/[ ]/ = /' | sort
-      else
-        git config "$options" --get-regexp 'alias.*' | sed 's/^alias\.//' | sed 's/[ ]/ = /' | sort
-      fi
-      ;;
+    git config $options --get-regexp 'alias.*' | sed 's/^alias\.//' | sed 's/[ ]/ = /' | sort
+    ;;
   1)
-      if [[ -z "$options" ]]; then
-        git config --get-regexp 'alias.*' | sed 's/^alias\.//' | sed 's/[ ]/ = /' | sort | grep -e "$1"
-      else
-        git config "$options" --get-regexp 'alias.*' | sed 's/^alias\.//' | sed 's/[ ]/ = /' | sort | grep -e "$1"
-      fi
-      ;;
+    git config $options --get-regexp 'alias.*' | sed 's/^alias\.//' | sed 's/[ ]/ = /' | sort | grep -e "$1"
+    ;;
   2)
-      if [[ -z "$options" ]]; then
-        git config alias."$1" "$2"
-      else
-        git config "$options" alias."$1" "$2"
-      fi
-      ;;
+    git config $options alias."$1" "$2"
+    ;;
   *) >&2 echo "error: too many arguments." && usage && exit 1 ;;
 esac

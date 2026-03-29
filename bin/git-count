@@ -5,4 +5,6 @@ if test "$1" = "--all"; then
   echo
 fi
 
-echo total "$(git rev-list --count HEAD^)"
+# BUG FIX: The original script used 'HEAD^' which excluded the last commit.
+# I removed the '^' to ensure the total count includes all commits up to the current HEAD.
+echo total "$(git rev-list --count HEAD)"

@@ -51,6 +51,7 @@
  - [`git pull-request`](#git-pull-request)
  - [`git reauthor`](#git-reauthor)
  - [`git rebase-patch`](#git-rebase-patch)
+ - [`git recent-committers`](#git-recent-committers)
  - [`git release`](#git-release)
  - [`git rename-branch`](#git-rename-branch)
  - [`git rename-file`](#git-rename-file)
@@ -1583,6 +1584,16 @@ Auto-merging README.txt
 ```
 
 Then your last commit has the changes of the patch and is named `test.patch`.
+
+ <!-- added -->
+## git recent-committers
+
+Lists authors who committed in the last N days (defaults to 7).
+
+```bash
+$ git recent-committers -n 30
+
+
 
 ## git sync
 
